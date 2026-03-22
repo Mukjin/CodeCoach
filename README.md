@@ -2,6 +2,13 @@
 
 > 단순한 코드 피드백을 넘어, 개발자의 지속적인 성장을 돕는 **AI 코드 학습 코치 플랫폼**입니다. 사용자가 코드를 제출하면 퀄리티 점수와 리뷰뿐만 아니라, 부족한 CS/수학 개념을 '개념 카드' 형태로 수집해주고, 이를 바탕으로 맞춤형 학습 로드맵과 챌린지를 제공합니다.
 
+<img width="1914" height="957" alt="스크린샷 2026-03-23 오전 2 48 47" src="https://github.com/user-attachments/assets/ad4235b3-d73f-4fb6-8307-c142c463a3b4" />
+
+
+https://github.com/user-attachments/assets/e12754ab-86c9-426a-bfbd-b997c2d8409a
+
+
+
 ## ✨ 주요 기능 (Features)
 
 - **📝 실시간 AI 코드 리뷰**: Monaco 에디터 상에서 코드를 작성하고 제출하면, Gemini AI가 라인별 분석 결과와 개선 코드를 실시간 스트리밍으로 제공합니다.
