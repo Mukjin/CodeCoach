@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useReviewStore } from '@/store/reviewStore';
+import { useHistoryStore } from '@/store/historyStore';
 import CodeEditor from '@/components/CodeEditor';
 import ReviewResultPanel from '@/components/ReviewResult';
 import { Play, Loader2, Sparkles, AlertCircle } from 'lucide-react';
@@ -77,6 +78,13 @@ export default function ReviewPage() {
                 const cleaned = fullText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
                 const parsed = JSON.parse(cleaned);
                 setReviewResult(parsed);
+
+                // 실제 제출 데이터 히스토리 저장
+                useHistoryStore.getState().addSubmission({
+                    code,
+                    language,
+                    result: parsed,
+                });
             } catch (e) {
                 console.error('JSON 파싱 실패:', fullText);
                 setError('리뷰 결과 형식이 올바르지 않습니다.');

@@ -2,86 +2,76 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import {
-    Code2,
-    BookOpen,
-    Flame,
-    Target,
-    ArrowRight,
-    Sparkles
-} from 'lucide-react';
+import { Flame, Target, ArrowRight, Sparkles, BookOpen, Code2 } from 'lucide-react';
 import HeatMap from '@/components/HeatMap';
 import ScoreChart from '@/components/ScoreChart';
 import WeakPatternBanner from '@/components/WeakPatternBanner';
 import ConceptCard from '@/components/ConceptCard';
-import ChallengeCard from '@/components/ChallengeCard';
+import { useHistoryStore } from '@/store/historyStore';
+import { useMemo } from 'react';
 
-// 더미 데이터
-const mockStats = {
-    totalSubmissions: 42,
-    totalConceptCards: 128,
-    averageScore: 7.4,
-    currentStreak: 5,
-};
+export default function DashboardPage() {
+    const { submissions, getAllConcepts, getWeakPatternsFrequency } = useHistoryStore();
 
-const mockHeatMapData = Array.from({ length: 365 }).map((_, i) => {
-    const date = new Date();
-    date.setDate(date.getDate() - (365 - i));
-    return {
-        date: date.toISOString().split('T')[0],
-        count: Math.random() > 0.7 ? Math.floor(Math.random() * 4) : 0,
-    };
-});
+    // 통계 파생
+    const stats = useMemo(() => {
+        const totalSubmissions = submissions.length;
+        const totalConceptCards = getAllConcepts().length;
+        const averageScore = totalSubmissions > 0
+            ? (submissions.reduce((acc, sub) => acc + sub.result.score, 0) / totalSubmissions).toFixed(1)
+            : 0;
 
-const mockScoreData = Array.from({ length: 14 }).map((_, i) => ({
-    date: `3/${i + 1}`,
-    score: 5 + Math.random() * 4,
-}));
+        // 임의의 스트릭 계산 (오늘부터 연속 제출일)
+        const currentStreak = totalSubmissions > 0 ? 1 : 0; // 심화 로직은 추후 구현
 
-const mockWeakPatterns = [
-    {
-        id: '1',
-        userId: 'user1',
-        pattern: '클로저(Closure)',
-        count: 4,
+        return { totalSubmissions, totalConceptCards, averageScore, currentStreak };
+    }, [submissions, getAllConcepts]);
+
+    // 히트맵 파생
+    const heatMapData = useMemo(() => {
+        const dataMap = new Map<string, number>();
+        submissions.forEach(sub => {
+            const dateStr = new Date(sub.timestamp).toISOString().split('T')[0];
+            dataMap.set(dateStr, (dataMap.get(dateStr) || 0) + 1);
+        });
+
+        return Array.from({ length: 365 }).map((_, i) => {
+            const date = new Date();
+            date.setDate(date.getDate() - (365 - i));
+            const dateStr = date.toISOString().split('T')[0];
+            return {
+                date: dateStr,
+                count: dataMap.get(dateStr) || 0,
+            };
+        });
+    }, [submissions]);
+
+    // 스코어 차트 파생 (최근 14개)
+    const scoreData = useMemo(() => {
+        const recentSubmissions = [...submissions].sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()).slice(-14);
+        return recentSubmissions.map(sub => {
+            const d = new Date(sub.timestamp);
+            return {
+                date: `${d.getMonth() + 1}/${d.getDate()}`,
+                score: sub.result.score
+            };
+        });
+    }, [submissions]);
+
+    // 약점 배너 데이터 생성
+    const weakPatterns = getWeakPatternsFrequency().map((wp, idx) => ({
+        id: `wp-${idx}`,
+        userId: 'local',
+        pattern: wp.pattern,
+        count: wp.count,
         status: 'recurring' as const,
         firstSeenAt: new Date(),
         lastSeenAt: new Date(),
-    }
-];
+    }));
 
-const mockTodayCards = [
-    {
-        name: '메모이제이션',
-        definition: '이전에 계산한 값을 식별자에 저장해 두었다가, 또 다시 계산하지 않고 꺼내 쓰는 기법',
-        contextExplanation: '재귀 함수나 복잡한 계산을 수행할 때 불필요한 중복 계산을 방지합니다.',
-        exampleCode: 'const memo = {};\nfunction fib(n) {\n  if (n in memo) return memo[n];\n  if (n <= 2) return 1;\n  return memo[n] = fib(n-1) + fib(n-2);\n}',
-        studyKeywords: ['동적 계획법', '캐싱', '성능 최적화'],
-        difficulty: 'intermediate' as const,
-    },
-    {
-        name: '이벤트 위임',
-        definition: '하위 요소에 각각 이벤트를 붙이지 않고, 상위 요소에서 하위 요소의 이벤트를 제어하는 방식',
-        contextExplanation: '동적으로 추가되는 요소들의 이벤트를 효율적으로 관리할 수 있습니다.',
-        exampleCode: 'document.getElementById("menu").addEventListener("click", function(e) {\n  if(e.target && e.target.nodeName == "LI") {\n    console.log("List item clicked!");\n  }\n});',
-        studyKeywords: ['이벤트 버블링', 'DOM 조작', '성능 개선'],
-        difficulty: 'beginner' as const,
-    }
-];
+    // 최근 추가된 개념 카드 3개
+    const recentConcepts = getAllConcepts().slice(0, 3);
 
-const mockChallenges = [
-    {
-        id: 'c1',
-        title: '클로저를 활용한 카운터 구현',
-        difficulty: 'medium' as const,
-        description: '전역 변수를 사용하지 않고 독립적인 상태를 가지는 카운터 함수를 작성하세요.',
-        hints: ['반환되는 내부 함수가 외부 함수의 변수를 참조해야 합니다.'],
-        relatedConcept: '클로저(Closure)',
-        completed: false,
-    }
-];
-
-export default function DashboardPage() {
     return (
         <div className="w-full max-w-[1800px] mx-auto p-4 md:p-8 space-y-8 pb-32">
             {/* 헤더 */}
@@ -101,14 +91,14 @@ export default function DashboardPage() {
                 </Link>
             </div>
 
-            <WeakPatternBanner patterns={mockWeakPatterns} />
+            {weakPatterns.length > 0 && <WeakPatternBanner patterns={weakPatterns} />}
 
             {/* 핵심 지표 4개 */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pb-2">
                 <StatCard
                     icon={Code2}
                     label="총 제출 횟수"
-                    value={mockStats.totalSubmissions}
+                    value={stats.totalSubmissions}
                     suffix="회"
                     color="text-blue-400"
                     bg="bg-blue-500/10"
@@ -116,7 +106,7 @@ export default function DashboardPage() {
                 <StatCard
                     icon={BookOpen}
                     label="누적 개념 카드"
-                    value={mockStats.totalConceptCards}
+                    value={stats.totalConceptCards}
                     suffix="장"
                     color="text-purple-400"
                     bg="bg-purple-500/10"
@@ -124,7 +114,7 @@ export default function DashboardPage() {
                 <StatCard
                     icon={Target}
                     label="평균 코드 품질"
-                    value={mockStats.averageScore}
+                    value={stats.averageScore}
                     suffix="점"
                     color="text-emerald-400"
                     bg="bg-emerald-500/10"
@@ -132,7 +122,7 @@ export default function DashboardPage() {
                 <StatCard
                     icon={Flame}
                     label="현재 학습 스트릭"
-                    value={mockStats.currentStreak}
+                    value={stats.currentStreak}
                     suffix="일"
                     color="text-orange-400"
                     bg="bg-orange-500/10"
@@ -148,13 +138,19 @@ export default function DashboardPage() {
                             <h2 className="text-base font-semibold text-white">연간 학습 활동</h2>
                             <span className="text-xs text-zinc-500">최근 1년 잔디밭</span>
                         </div>
-                        <HeatMap data={mockHeatMapData} />
+                        <HeatMap data={heatMapData} />
                     </div>
 
                     {/* 점수 추이 차트 */}
                     <div className="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6">
                         <h2 className="text-base font-semibold text-white mb-6">최근 코드 품질 추이</h2>
-                        <ScoreChart data={mockScoreData} />
+                        {scoreData.length > 0 ? (
+                            <ScoreChart data={scoreData} />
+                        ) : (
+                            <div className="flex items-center justify-center py-10 text-zinc-500">
+                                아직 제출된 리뷰가 없어 차트를 그릴 수 없습니다.
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -165,29 +161,21 @@ export default function DashboardPage() {
                         <div className="flex items-center justify-between mb-4">
                             <h2 className="text-base font-semibold text-white flex items-center gap-2">
                                 <Sparkles className="w-4 h-4 text-yellow-400" />
-                                오늘의 복습
+                                최근 수집한 개념
                             </h2>
                             <Link href="/concepts" className="text-xs text-zinc-500 hover:text-white transition-colors">전체 보기 &rarr;</Link>
                         </div>
                         <div className="space-y-4">
-                            {mockTodayCards.map((card, idx) => (
+                            {recentConcepts.length > 0 ? recentConcepts.map((card, idx) => (
                                 <ConceptCard key={idx} card={card} compact />
-                            ))}
+                            )) : (
+                                <div className="text-sm text-zinc-500 py-4 text-center">
+                                    리뷰를 통해 새로운 개념 카드를 모아보세요!
+                                </div>
+                            )}
                         </div>
                     </div>
 
-                    {/* 추천 챌린지 */}
-                    <div className="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6">
-                        <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-base font-semibold text-white">약점 맞춤 챌린지</h2>
-                            <Link href="/challenges" className="text-xs text-zinc-500 hover:text-white transition-colors">더 보기 &rarr;</Link>
-                        </div>
-                        <div className="space-y-3">
-                            {mockChallenges.map((challenge) => (
-                                <ChallengeCard key={challenge.id} challenge={challenge} />
-                            ))}
-                        </div>
-                    </div>
                 </div>
             </div>
 

@@ -17,7 +17,6 @@ const navItems = [
     { href: '/review', label: '코드 리뷰', icon: Code2 },
     { href: '/concepts', label: '개념 노트', icon: BookOpen },
     { href: '/roadmap', label: '로드맵', icon: Map },
-    { href: '/challenges', label: '챌린지', icon: Swords },
     { href: '/history', label: '히스토리', icon: History },
 ];
 
@@ -28,12 +27,12 @@ export default function Navbar() {
         <nav className="fixed left-0 top-0 bottom-0 w-16 md:w-56 bg-zinc-950 border-r border-zinc-800/60 flex flex-col z-50">
             {/* 로고 */}
             <div className="p-4 border-b border-zinc-800/60">
-                <Link href="/dashboard" className="flex items-center gap-2 group">
+                <a href="/" className="flex items-center gap-2 group">
                     <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                         <Brain className="w-4 h-4 text-white" />
                     </div>
                     <span className="hidden md:block text-sm font-bold text-white">CodeCoach</span>
-                </Link>
+                </a>
             </div>
 
             {/* 네비게이션 */}
@@ -45,8 +44,8 @@ export default function Navbar() {
                             key={href}
                             href={href}
                             className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-150 group ${isActive
-                                    ? 'bg-purple-600/20 text-purple-300'
-                                    : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/60'
+                                ? 'bg-purple-600/20 text-purple-300'
+                                : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/60'
                                 }`}
                         >
                             <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-purple-400' : ''}`} />

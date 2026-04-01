@@ -1,37 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import { Search, Flame, Calendar, Star } from 'lucide-react';
+import { Search, Flame, Calendar, Star, BookOpen } from 'lucide-react';
 import ConceptCardGrid from '@/components/ConceptCardGrid';
-
-const mockCards = [
-    {
-        name: '클로저(Closure)',
-        definition: '함수가 선언될 당시의 렉시컬 환경을 기억하는 함수',
-        contextExplanation: '은닉화나 상태 유지를 위해 자주 사용되는 패턴입니다.',
-        exampleCode: 'function makeCounter() {\n  let count = 0;\n  return function() {\n    return count++;\n  };\n}',
-        studyKeywords: ['렉시컬 스코프', '실행 컨텍스트', '캡슐화'],
-        difficulty: 'intermediate' as const,
-    },
-    {
-        name: '호이스팅',
-        definition: '변수나 함수 선언 코드가 최상단으로 끌어올려진 것처럼 동작하는 현상',
-        contextExplanation: 'var와 let/const의 차이를 이해하는 핵심입니다.',
-        exampleCode: 'console.log(a); // undefined\nvar a = 1;\n\nconsole.log(b); // ReferenceError\nlet b = 2;',
-        studyKeywords: ['TDZ', '스코프', 'var vs let'],
-        difficulty: 'beginner' as const,
-    },
-    {
-        name: '제너레이터',
-        definition: '함수의 실행을 중간에 멈췄다가 재개할 수 있는 기능',
-        contextExplanation: '비동기 처리나 무한 시퀀스 생성에 유용합니다.',
-        exampleCode: 'function* idMaker() {\n  let index = 0;\n  while (true)\n    yield index++;\n}\nconst gen = idMaker();',
-        studyKeywords: ['이터레이터', 'yield', '비동기'],
-        difficulty: 'advanced' as const,
-    }
-];
+import { useHistoryStore } from '@/store/historyStore';
 
 export default function ConceptsPage() {
+    const { getAllConcepts } = useHistoryStore();
+    const mockCards = getAllConcepts();
+
     const [searchTerm, setSearchTerm] = useState('');
     const [activeTab, setActiveTab] = useState<'all' | 'review' | 'bookmarked'>('all');
 
@@ -96,6 +73,3 @@ export default function ConceptsPage() {
         </div>
     );
 }
-
-// 아이콘 임포트를 위해 추가
-import { BookOpen } from 'lucide-react';
